@@ -1,0 +1,41 @@
+package com.example.widget_primjer
+
+import android.appwidget.AppWidgetManager
+import android.content.Context
+import android.content.SharedPreferences
+import android.net.Uri
+import android.widget.RemoteViews
+import es.antonborri.home_widget.HomeWidgetBackgroundIntent
+import es.antonborri.home_widget.HomeWidgetLaunchIntent
+import es.antonborri.home_widget.HomeWidgetProvider
+
+class AppWidgetProvider : HomeWidgetProvider() {
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray, widgetData: SharedPreferences) {
+        appWidgetIds.forEach { widgetId ->
+            val views = RemoteViews(context.packageName, R.layout.widget_layout).apply {
+
+                // Otvaranje aplikacije na dodir widgeta
+                val pendingIntent = HomeWidgetLaunchIntent.getActivity(context,
+                    MainActivity::class.java)
+                setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+
+                val counter = widgetData.getInt("_counter", 0)
+
+                var counterText = "Vrijednost brojača: $counter"
+
+                if (counter == 0) {
+                    counterText = "Niste pritisnuli gumb brojača!"
+                }
+
+                setTextViewText(R.id.tv_counter, counterText)
+
+                // Čeka se intent za ažuriranje brojača na dodir gumba
+                val backgroundIntent = HomeWidgetBackgroundIntent.getBroadcast(context,
+                    Uri.parse("myAppWidget://updatecounter"))
+                setOnClickPendingIntent(R.id.bt_update, backgroundIntent)
+            }
+            appWidgetManager.updateAppWidget(widgetId, views)
+        }
+    }
+}
+
